@@ -29,7 +29,7 @@ watch(query, async (value) => {
 })
 
 function select(item: (typeof results.value)[number]) {
-  if (item.kind === 'company') router.push('/ajustes')
+  if (item.kind === 'company') router.push('/configuracion')
   else router.push('/productos')
   emit('close')
 }
@@ -49,7 +49,7 @@ function onKey(e: KeyboardEvent) {
             ref="inputRef"
             v-model="query"
             type="search"
-            placeholder="Buscar productos demo, empresa…"
+            placeholder="Buscar un producto o tu negocio…"
             aria-label="Buscar"
           />
           <kbd>Esc</kbd>
@@ -62,9 +62,9 @@ function onKey(e: KeyboardEvent) {
             </button>
           </li>
         </ul>
-        <p v-else-if="query.trim()" class="search-panel__empty">Sin resultados en datos locales.</p>
+        <p v-else-if="query.trim()" class="search-panel__empty">No encontramos nada con ese texto.</p>
         <p v-else class="search-panel__empty">
-          Escribe para buscar en el catálogo demo y el perfil de empresa.
+          Escribe el nombre de un producto de ejemplo o el de tu negocio.
         </p>
       </div>
     </div>

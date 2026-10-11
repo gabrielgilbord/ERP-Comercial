@@ -2,7 +2,7 @@
 
 Gestión comercial multiplataforma, offline-first y personalizable para pequeños negocios.
 
-> Producto independiente. Fase actual: **1 — Shell, sistema visual y persistencia local**.
+> Producto independiente. Fase actual: **1.5 — UX para comerciantes** (sobre el shell de la Fase 1).
 
 ## Diagnóstico rápido
 

@@ -3,14 +3,19 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppButton from '../components/ui/AppButton.vue'
 import AppInput from '../components/ui/AppInput.vue'
-import { BUSINESS_TEMPLATES, type BusinessTemplateId } from '../domain/types'
+import { BUSINESS_TEMPLATES, type BusinessTemplateId, type ThemeMode } from '../domain/types'
 import { useAppStore } from '../stores/appStore'
+import { useThemeStore } from '../stores/themeStore'
+
+const TOTAL_STEPS = 5
 
 const app = useAppStore()
+const theme = useThemeStore()
 const router = useRouter()
 
-const step = ref(app.settings?.setupStep ?? 0)
+const step = ref(clampStep(app.settings?.setupStep ?? 0))
 const saving = ref(false)
+const showAdvanced = ref(false)
 
 const form = reactive({
   name: app.company?.name ?? '',
@@ -18,28 +23,30 @@ const form = reactive({
   taxId: app.company?.taxId ?? '',
   email: app.company?.email ?? '',
   template: (app.company?.businessTemplate ?? null) as BusinessTemplateId | null,
+  wantDemo: !!app.settings?.demoMode,
 })
 
 watch(
   () => app.settings?.setupStep,
   (value) => {
-    if (typeof value === 'number') step.value = value
+    if (typeof value === 'number') step.value = clampStep(value)
   },
 )
 
 const steps = [
-  'Empresa',
-  'Plantilla',
-  'Importación',
-  'Impresora',
-  'Tickets',
-  'Impuestos',
-  'Usuarios',
-  'Venta de prueba',
-  'Copias y offline',
+  'Tu negocio',
+  'Tipo de comercio',
+  'Productos de ejemplo',
+  'Aspecto',
+  'Listo',
 ]
 
-const title = computed(() => steps[step.value] ?? 'Asistente')
+const title = computed(() => steps[step.value] ?? 'Empezar')
+
+function clampStep(value: number) {
+  if (Number.isNaN(value) || value < 0) return 0
+  return Math.min(value, TOTAL_STEPS - 1)
+}
 
 async function persistStep(next: number) {
   saving.value = true
@@ -47,7 +54,7 @@ async function persistStep(next: number) {
     if (step.value === 0) {
       await app.saveCompany({
         name: form.name,
-        tradeName: form.tradeName,
+        tradeName: form.tradeName || form.name,
         taxId: form.taxId,
         email: form.email,
       })
@@ -55,15 +62,18 @@ async function persistStep(next: number) {
     if (step.value === 1 && form.template) {
       await app.saveCompany({ businessTemplate: form.template })
     }
-    await app.setSetupStep(next)
-    step.value = next
+    if (step.value === 2) {
+      await app.toggleDemo(form.wantDemo)
+    }
+    await app.setSetupStep(clampStep(next))
+    step.value = clampStep(next)
   } finally {
     saving.value = false
   }
 }
 
 async function next() {
-  if (step.value >= steps.length - 1) {
+  if (step.value >= TOTAL_STEPS - 1) {
     await finish()
     return
   }
@@ -83,11 +93,12 @@ async function finish() {
   try {
     await app.saveCompany({
       name: form.name,
-      tradeName: form.tradeName,
+      tradeName: form.tradeName || form.name,
       taxId: form.taxId,
       email: form.email,
       businessTemplate: form.template,
     })
+    await app.toggleDemo(form.wantDemo)
     await app.completeSetup()
     router.push('/')
   } finally {
@@ -95,10 +106,16 @@ async function finish() {
   }
 }
 
-async function loadDemoAndContinue() {
-  await app.toggleDemo(true)
-  await next()
+async function onThemeChange(event: Event) {
+  const value = (event.target as HTMLSelectElement).value as ThemeMode
+  await theme.setMode(value)
 }
+
+const canContinue = computed(() => {
+  if (step.value === 0) return form.name.trim().length > 0 || form.tradeName.trim().length > 0
+  if (step.value === 1) return !!form.template
+  return true
+})
 </script>
 
 <template>
@@ -117,17 +134,37 @@ async function loadDemoAndContinue() {
       <h1>{{ title }}</h1>
 
       <div v-if="step === 0" class="block">
-        <p>Configura los datos básicos de tu negocio. Se guardan en este dispositivo.</p>
+        <p>
+          Empieza por cómo quieres que aparezca tu negocio. Se guarda solo en este dispositivo.
+          Ejemplo: «Panadería La Espiga».
+        </p>
         <div class="form">
-          <AppInput v-model="form.name" label="Razón social" id="wiz-name" />
-          <AppInput v-model="form.tradeName" label="Nombre comercial" id="wiz-trade" />
-          <AppInput v-model="form.taxId" label="NIF/CIF" id="wiz-tax" />
-          <AppInput v-model="form.email" label="Email" id="wiz-email" type="email" />
+          <AppInput
+            v-model="form.tradeName"
+            label="Nombre del negocio"
+            id="wiz-trade"
+            placeholder="Ej. Panadería La Espiga"
+            required
+          />
+          <AppInput
+            v-model="form.name"
+            label="Razón social (si es distinta)"
+            id="wiz-name"
+            placeholder="Opcional"
+            hint="Si no la tienes a mano, puedes dejarla para después."
+          />
+          <button type="button" class="linkish" @click="showAdvanced = !showAdvanced">
+            {{ showAdvanced ? 'Ocultar datos opcionales' : 'Añadir NIF y email (opcional)' }}
+          </button>
+          <template v-if="showAdvanced">
+            <AppInput v-model="form.taxId" label="NIF/CIF" id="wiz-tax" />
+            <AppInput v-model="form.email" label="Email" id="wiz-email" type="email" />
+          </template>
         </div>
       </div>
 
       <div v-else-if="step === 1" class="block">
-        <p>Elige una plantilla. No crea apps distintas: solo valores iniciales del núcleo común.</p>
+        <p>Elige la opción más parecida. No bloquea nada: solo nos ayuda a preparar Faro para ti.</p>
         <div class="templates">
           <button
             v-for="item in BUSINESS_TEMPLATES"
@@ -145,58 +182,47 @@ async function loadDemoAndContinue() {
 
       <div v-else-if="step === 2" class="block">
         <p>
-          La importación CSV/Excel de productos y clientes reales llega en Fase 2. Mientras tanto
-          puedes cargar datos demo claramente etiquetados.
+          ¿Quieres ver Faro con productos de ejemplo? Están marcados como DEMO. Puedes quitarlos
+          cuando quieras. La importación de tu CSV real llegará más adelante: no la simulamos.
         </p>
-        <AppButton variant="secondary" @click="loadDemoAndContinue">
-          Cargar demo y continuar
-        </AppButton>
+        <button
+          type="button"
+          class="choice"
+          :class="{ 'choice--active': form.wantDemo }"
+          @click="form.wantDemo = true"
+        >
+          <strong>Sí, cargar ejemplos</strong>
+          <span>Café, agua, material de papelería… para probar listados y búsqueda.</span>
+        </button>
+        <button
+          type="button"
+          class="choice"
+          :class="{ 'choice--active': !form.wantDemo }"
+          @click="form.wantDemo = false"
+        >
+          <strong>No, empezar vacío</strong>
+          <span>Verás la pantalla de productos sin datos hasta que añadas los tuyos.</span>
+        </button>
       </div>
 
       <div v-else-if="step === 3" class="block">
-        <p>
-          La configuración de impresora y lector se implementará con la capa nativa (Tauri) en Fase
-          3. En esta preview web no se afirma compatibilidad de hardware.
-        </p>
-      </div>
-
-      <div v-else-if="step === 4" class="block">
-        <p>
-          El diseñador visual de tickets es prioritario y se construirá de forma real en Fase 3–4.
-          Aquí solo reservamos el paso del asistente.
-        </p>
-      </div>
-
-      <div v-else-if="step === 5" class="block">
-        <p>
-          Impuestos y facturación fiscal requieren validación normativa (Fase 7). No se activará
-          VeriFactu ni se afirmará cumplimiento hasta entonces.
-        </p>
-      </div>
-
-      <div v-else-if="step === 6" class="block">
-        <p>
-          Usuarios, roles y permisos granulares se implementan con el núcleo de operaciones. En Fase
-          1 el acceso es local sin autenticación multiusuario.
-        </p>
-      </div>
-
-      <div v-else-if="step === 7" class="block">
-        <p>
-          La venta de prueba formará parte del TPV transaccional (Fase 3). Todavía no hay cobros ni
-          descuentos de stock.
-        </p>
+        <p>Elige el aspecto. Puedes cambiarlo luego en Configuración.</p>
+        <label class="pref">
+          <span>Tema de la pantalla</span>
+          <select :value="theme.mode" @change="onThemeChange">
+            <option value="system">Como el del dispositivo</option>
+            <option value="light">Claro</option>
+            <option value="dark">Oscuro</option>
+          </select>
+        </label>
       </div>
 
       <div v-else class="block">
-        <p>
-          Faro ya persiste datos en IndexedDB y muestra el estado online/offline. Las copias
-          recuperables y la cola de sync llegan en Fase 6.
-        </p>
-        <ul>
-          <li>Base local operativa (esta fase)</li>
-          <li>Sync remota: no configurada</li>
-          <li>Backup automático: pendiente</li>
+        <p>Con esto ya puedes moverte por Faro con tranquilidad.</p>
+        <ul class="ready-list">
+          <li><strong>Disponible hoy:</strong> configuración del negocio, productos de ejemplo y búsqueda.</li>
+          <li><strong>Todavía no:</strong> cobros, stock real, clientes, tickets e informes.</li>
+          <li><strong>Tus datos:</strong> se guardan en este dispositivo; puedes volver más tarde.</li>
         </ul>
       </div>
 
@@ -205,11 +231,16 @@ async function loadDemoAndContinue() {
           {{ step === 0 ? 'Salir' : 'Atrás' }}
         </AppButton>
         <div class="wizard__actions-right">
-          <AppButton v-if="step < steps.length - 1" variant="secondary" :disabled="saving" @click="finish">
+          <AppButton
+            v-if="step < steps.length - 1"
+            variant="secondary"
+            :disabled="saving"
+            @click="finish"
+          >
             Guardar y salir
           </AppButton>
-          <AppButton variant="primary" :disabled="saving || (step === 1 && !form.template)" @click="next">
-            {{ step === steps.length - 1 ? 'Terminar' : 'Continuar' }}
+          <AppButton variant="primary" :disabled="saving || !canContinue" @click="next">
+            {{ step === steps.length - 1 ? 'Empezar a usar Faro' : 'Continuar' }}
           </AppButton>
         </div>
       </div>
@@ -281,14 +312,23 @@ async function loadDemoAndContinue() {
   color: var(--text-muted);
 }
 
-.block p,
-.block ul {
+.block > p {
   margin-bottom: var(--space-4);
 }
 
 .form {
   display: grid;
   gap: var(--space-3);
+}
+
+.linkish {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
 }
 
 .templates {
@@ -320,6 +360,55 @@ async function loadDemoAndContinue() {
 .template--active {
   border-color: var(--accent);
   background: var(--accent-soft);
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-muted);
+}
+
+.choice strong {
+  color: var(--text);
+}
+
+.choice--active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.pref {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pref select {
+  max-width: 280px;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  padding: 0 10px;
+}
+
+.ready-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: var(--space-3);
 }
 
 .wizard__actions {

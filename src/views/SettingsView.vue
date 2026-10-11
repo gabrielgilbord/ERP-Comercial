@@ -15,6 +15,7 @@ const theme = useThemeStore()
 const router = useRouter()
 const saved = ref(false)
 const confirmReset = ref(false)
+const showAdvanced = ref(false)
 
 const form = reactive({
   name: app.company?.name ?? '',
@@ -73,24 +74,34 @@ async function doReset() {
 <template>
   <div>
     <PageHeader
-      title="Ajustes"
-      subtitle="Perfil de empresa y preferencias locales. Todo se guarda en IndexedDB de este navegador/dispositivo."
+      title="Configuración"
+      subtitle="Datos de tu negocio y preferencias. Todo se guarda en este dispositivo."
     >
       <template #actions>
-        <AppButton variant="primary" @click="save">Guardar cambios</AppButton>
+        <AppButton variant="primary" @click="save">Guardar</AppButton>
       </template>
     </PageHeader>
 
-    <p v-if="saved" class="toast" role="status">Cambios guardados en el dispositivo.</p>
+    <p v-if="saved" class="toast" role="status">Guardado correctamente.</p>
 
     <section class="section">
-      <h2>Empresa</h2>
+      <h2>Tu negocio</h2>
       <div class="form-grid">
+        <AppInput
+          v-model="form.tradeName"
+          label="Nombre del negocio"
+          id="trade"
+          placeholder="Ej. Ferretería Centro"
+        />
         <AppInput v-model="form.name" label="Razón social" id="name" />
-        <AppInput v-model="form.tradeName" label="Nombre comercial" id="trade" />
-        <AppInput v-model="form.taxId" label="NIF/CIF" id="tax" />
-        <AppInput v-model="form.email" label="Email" id="email" type="email" />
         <AppInput v-model="form.phone" label="Teléfono" id="phone" />
+        <AppInput v-model="form.email" label="Email" id="email" type="email" />
+      </div>
+      <button type="button" class="linkish" @click="showAdvanced = !showAdvanced">
+        {{ showAdvanced ? 'Ocultar dirección y NIF' : 'Mostrar dirección y NIF' }}
+      </button>
+      <div v-if="showAdvanced" class="form-grid advanced">
+        <AppInput v-model="form.taxId" label="NIF/CIF" id="tax" />
         <AppInput v-model="form.address" label="Dirección" id="address" />
         <AppInput v-model="form.city" label="Ciudad" id="city" />
         <AppInput v-model="form.postalCode" label="Código postal" id="postal" />
@@ -101,38 +112,40 @@ async function doReset() {
       <h2>Preferencias</h2>
       <div class="prefs">
         <label class="pref">
-          <span>Tema</span>
+          <span>Aspecto</span>
           <select :value="theme.mode" @change="onThemeChange">
-            <option value="system">Sistema</option>
+            <option value="system">Como el del dispositivo</option>
             <option value="light">Claro</option>
             <option value="dark">Oscuro</option>
           </select>
         </label>
         <label class="pref pref--row">
-          <input
-            type="checkbox"
-            :checked="!!app.settings?.demoMode"
-            @change="onDemoToggle"
-          />
-          <span>Usar datos de demostración (etiquetados y separados del uso real)</span>
+          <input type="checkbox" :checked="!!app.settings?.demoMode" @change="onDemoToggle" />
+          <span>
+            Usar productos de ejemplo (DEMO).
+            <em>No se mezclan con un catálogo real; puedes quitarlos cuando quieras.</em>
+          </span>
         </label>
-        <p class="meta">
-          Terminal: <code>{{ app.settings?.terminalId }}</code>
-        </p>
+        <AppButton variant="secondary" size="sm" @click="router.push('/asistente')">
+          Abrir guía de inicio
+        </AppButton>
       </div>
     </section>
 
     <section class="section danger-zone">
-      <h2>Zona sensible</h2>
-      <p>Borra todos los datos locales de Faro en este navegador. No afecta a otros dispositivos.</p>
-      <AppButton variant="danger" @click="confirmReset = true">Restablecer datos locales</AppButton>
+      <h2>Borrar datos de este dispositivo</h2>
+      <p>
+        Elimina la configuración y los productos de ejemplo guardados aquí. No afecta a otros
+        ordenadores o móviles.
+      </p>
+      <AppButton variant="danger" @click="confirmReset = true">Borrar y empezar de nuevo</AppButton>
     </section>
 
     <ConfirmDialog
       :open="confirmReset"
-      title="¿Restablecer datos locales?"
-      message="Se eliminarán empresa, preferencias, cola y productos demo de este dispositivo. Esta acción no se puede deshacer."
-      confirm-label="Restablecer"
+      title="¿Borrar los datos de este dispositivo?"
+      message="Se eliminarán el nombre del negocio, preferencias y productos de ejemplo. No se puede deshacer."
+      confirm-label="Borrar todo"
       danger
       @cancel="confirmReset = false"
       @confirm="doReset"
@@ -143,10 +156,8 @@ async function doReset() {
 <style scoped>
 .section {
   margin-bottom: var(--space-6);
-  padding: var(--space-5);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
+  padding: var(--space-5) 0;
+  border-bottom: 1px solid var(--border);
 }
 
 .section h2 {
@@ -162,10 +173,25 @@ async function doReset() {
   gap: var(--space-4);
 }
 
+.advanced {
+  margin-top: var(--space-4);
+}
+
+.linkish {
+  margin-top: var(--space-4);
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
 .prefs {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  align-items: flex-start;
 }
 
 .pref {
@@ -177,11 +203,11 @@ async function doReset() {
 }
 
 .pref select {
-  max-width: 240px;
-  min-height: 40px;
+  max-width: 280px;
+  min-height: 44px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  background: var(--bg-elevated);
+  background: var(--surface);
   padding: 0 10px;
 }
 
@@ -190,23 +216,21 @@ async function doReset() {
   align-items: flex-start;
   gap: var(--space-3);
   font-weight: 500;
+  max-width: 52ch;
 }
 
-.meta {
+.pref--row em {
+  display: block;
+  margin-top: 4px;
+  font-style: normal;
   color: var(--text-muted);
   font-size: 12px;
-}
-
-code {
-  font-size: 12px;
-  background: var(--surface-muted);
-  padding: 2px 6px;
-  border-radius: 4px;
 }
 
 .danger-zone p {
   color: var(--text-muted);
   margin-bottom: var(--space-4);
+  max-width: 52ch;
 }
 
 .toast {

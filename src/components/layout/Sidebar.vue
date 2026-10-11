@@ -1,46 +1,29 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  LayoutDashboard,
-  ShoppingCart,
-  Package,
-  Users,
-  Warehouse,
-  SlidersHorizontal,
-  FileText,
-  BarChart3,
-  Settings,
-  X,
-} from '@lucide/vue'
+import { Home, Package, Settings, X } from '@lucide/vue'
 import { useAppStore } from '../../stores/appStore'
 
-const props = defineProps<{ open: boolean }>()
+defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
 const route = useRoute()
 const router = useRouter()
 const app = useAppStore()
 
-const groups = computed(() => [
+const items = computed(() => [
+  { to: '/', label: 'Inicio', icon: Home, match: (path: string) => path === '/' },
   {
-    label: 'Operar',
-    items: [
-      { to: '/', label: 'Inicio', icon: LayoutDashboard },
-      { to: '/tpv', label: 'TPV', icon: ShoppingCart },
-      { to: '/productos', label: 'Productos', icon: Package },
-      { to: '/clientes', label: 'Clientes', icon: Users },
-      { to: '/inventario', label: 'Inventario', icon: Warehouse },
-    ],
+    to: '/productos',
+    label: 'Productos',
+    icon: Package,
+    match: (path: string) => path.startsWith('/productos'),
   },
   {
-    label: 'Configurar',
-    items: [
-      { to: '/personalizar', label: 'Personalizar mi negocio', icon: SlidersHorizontal },
-      { to: '/documentos', label: 'Diseñador de documentos', icon: FileText },
-      { to: '/informes', label: 'Informes', icon: BarChart3 },
-      { to: '/ajustes', label: 'Ajustes', icon: Settings },
-    ],
+    to: '/configuracion',
+    label: 'Configuración',
+    icon: Settings,
+    match: (path: string) => path.startsWith('/configuracion') || path.startsWith('/ajustes'),
   },
 ])
 
@@ -51,12 +34,12 @@ function go(to: string) {
 </script>
 
 <template>
-  <aside class="sidebar" :class="{ 'sidebar--open': open }" aria-label="Navegación principal">
+  <aside class="sidebar" :class="{ 'sidebar--open': open }" aria-label="Menú principal">
     <div class="sidebar__brand">
       <div class="brand-mark" aria-hidden="true">F</div>
       <div>
         <div class="brand-name">Faro</div>
-        <div class="brand-sub">{{ app.companyDisplayName }}</div>
+        <div class="brand-sub">{{ app.companyDisplayName === 'Faro' ? 'Tu negocio' : app.companyDisplayName }}</div>
       </div>
       <button class="sidebar__close" type="button" aria-label="Cerrar menú" @click="emit('close')">
         <X :size="18" />
@@ -64,24 +47,22 @@ function go(to: string) {
     </div>
 
     <nav class="sidebar__nav">
-      <div v-for="group in groups" :key="group.label" class="nav-group">
-        <div class="nav-group__label">{{ group.label }}</div>
-        <button
-          v-for="item in group.items"
-          :key="item.to"
-          type="button"
-          class="nav-item"
-          :class="{ 'nav-item--active': route.path === item.to }"
-          @click="go(item.to)"
-        >
-          <component :is="item.icon" :size="18" :stroke-width="1.75" />
-          <span>{{ item.label }}</span>
-        </button>
-      </div>
+      <p class="nav-hint">Qué quieres hacer</p>
+      <button
+        v-for="item in items"
+        :key="item.to"
+        type="button"
+        class="nav-item"
+        :class="{ 'nav-item--active': item.match(route.path) }"
+        @click="go(item.to)"
+      >
+        <component :is="item.icon" :size="18" :stroke-width="1.75" />
+        <span>{{ item.label }}</span>
+      </button>
     </nav>
 
     <div class="sidebar__foot">
-      <span>Fase 1 · Local</span>
+      <p>Tus datos se guardan en este dispositivo.</p>
     </div>
   </aside>
   <div v-if="open" class="sidebar-backdrop" @click="emit('close')" />
@@ -155,16 +136,10 @@ function go(to: string) {
   padding: var(--space-4) var(--space-3);
 }
 
-.nav-group + .nav-group {
-  margin-top: var(--space-5);
-}
-
-.nav-group__label {
+.nav-hint {
   padding: 0 var(--space-3);
-  margin-bottom: var(--space-2);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  margin: 0 0 var(--space-3);
+  font-size: 12px;
   color: var(--sidebar-muted);
 }
 
@@ -173,7 +148,7 @@ function go(to: string) {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 var(--space-3);
   border: 0;
   border-radius: var(--radius-sm);
@@ -181,6 +156,7 @@ function go(to: string) {
   color: var(--sidebar-text);
   cursor: pointer;
   text-align: left;
+  font-size: 15px;
   transition: background var(--motion-fast);
 }
 
@@ -198,6 +174,11 @@ function go(to: string) {
   font-size: 12px;
   color: var(--sidebar-muted);
   border-top: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.sidebar__foot p {
+  margin: 0;
+  line-height: 1.4;
 }
 
 .sidebar-backdrop {

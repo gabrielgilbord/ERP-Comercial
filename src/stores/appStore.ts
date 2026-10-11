@@ -46,7 +46,7 @@ export const useAppStore = defineStore('app', () => {
   }
 
   async function completeSetup() {
-    settings.value = await updateSettings({ setupCompleted: true, setupStep: 9 })
+    settings.value = await updateSettings({ setupCompleted: true, setupStep: 4 })
   }
 
   async function setSetupStep(step: number) {

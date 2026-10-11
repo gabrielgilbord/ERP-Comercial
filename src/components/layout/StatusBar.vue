@@ -1,41 +1,28 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { CloudOff, Cloud, AlertTriangle, DatabaseBackup } from '@lucide/vue'
+import { HardDrive, Wifi, WifiOff } from '@lucide/vue'
 import { useConnectivityStore } from '../../stores/connectivityStore'
 
 const connectivity = useConnectivityStore()
 
-const syncLabel = computed(() => {
-  if (!connectivity.lastSyncAt) return 'Sync remota: no configurada'
-  return `Última sync: ${new Date(connectivity.lastSyncAt).toLocaleString('es-ES')}`
-})
-
-const backupLabel = computed(() => {
-  if (!connectivity.lastBackupAt) return 'Copia: pendiente de configurar'
-  return `Copia: ${new Date(connectivity.lastBackupAt).toLocaleString('es-ES')}`
-})
+const connectionLabel = computed(() =>
+  connectivity.online ? 'Con internet' : 'Sin internet · puedes seguir trabajando aquí',
+)
 </script>
 
 <template>
   <footer class="statusbar" aria-live="polite">
+    <div class="statusbar__item">
+      <HardDrive :size="14" />
+      <span>Guardado en este dispositivo</span>
+    </div>
     <div class="statusbar__item" :class="connectivity.online ? 'is-online' : 'is-offline'">
-      <Cloud v-if="connectivity.online" :size="14" />
-      <CloudOff v-else :size="14" />
-      <span>{{ connectivity.statusLabel }}</span>
+      <Wifi v-if="connectivity.online" :size="14" />
+      <WifiOff v-else :size="14" />
+      <span>{{ connectionLabel }}</span>
     </div>
-    <div class="statusbar__item">
-      <span>{{ syncLabel }}</span>
-    </div>
-    <div class="statusbar__item">
-      <span>Pendientes: {{ connectivity.pendingOps }}</span>
-    </div>
-    <div v-if="connectivity.conflictCount > 0" class="statusbar__item is-warn">
-      <AlertTriangle :size="14" />
-      <span>Conflictos: {{ connectivity.conflictCount }}</span>
-    </div>
-    <div class="statusbar__item">
-      <DatabaseBackup :size="14" />
-      <span>{{ backupLabel }}</span>
+    <div v-if="connectivity.pendingOps > 0" class="statusbar__item is-warn">
+      <span>{{ connectivity.pendingOps }} cambios pendientes de enviar</span>
     </div>
   </footer>
 </template>

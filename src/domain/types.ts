@@ -66,22 +66,22 @@ export const BUSINESS_TEMPLATES: {
 }[] = [
   {
     id: 'tienda_general',
-    label: 'Tienda general',
-    description: 'Venta al público, catálogo amplio y tickets rápidos.',
+    label: 'Tienda o comercio general',
+    description: 'Vendes al público varios tipos de productos.',
   },
   {
     id: 'comercio_especializado',
     label: 'Comercio especializado',
-    description: 'Referencias, variantes y fichas de producto ricas.',
+    description: 'Una categoría concreta: moda, electrónica, ferretería…',
   },
   {
     id: 'distribuidor',
-    label: 'Distribuidor pequeño',
-    description: 'Pedidos, almacenes y márgenes por tarifa.',
+    label: 'Pequeña distribución',
+    description: 'Compras, almacenas y sirves a otros negocios.',
   },
   {
     id: 'servicios',
-    label: 'Servicios',
-    description: 'Prestaciones sin stock físico como eje principal.',
+    label: 'Negocio de servicios',
+    description: 'Reparaciones, citas u otros trabajos sin stock como eje.',
   },
 ]

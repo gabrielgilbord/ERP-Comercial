@@ -8,7 +8,7 @@ const router = createRouter({
       path: '/asistente',
       name: 'setup',
       component: () => import('../views/SetupWizardView.vue'),
-      meta: { title: 'Asistente inicial' },
+      meta: { title: 'Empezar' },
     },
     {
       path: '/',
@@ -21,22 +21,30 @@ const router = createRouter({
           meta: { title: 'Inicio' },
         },
         {
-          path: 'tpv',
-          name: 'pos',
-          component: () => import('../views/ComingSoonView.vue'),
-          meta: {
-            title: 'TPV',
-            module: 'TPV y ventas',
-            phase: 'Fase 3',
-            summary:
-              'Búsqueda, códigos de barras, carrito, caja y tickets configurables. Aún no operativo.',
-          },
-        },
-        {
           path: 'productos',
           name: 'products',
           component: () => import('../views/ProductsView.vue'),
           meta: { title: 'Productos' },
+        },
+        {
+          path: 'configuracion',
+          name: 'settings',
+          component: () => import('../views/SettingsView.vue'),
+          meta: { title: 'Configuración' },
+        },
+        // Alias y rutas antiguas: no se muestran en el menú, siguen accesibles.
+        { path: 'ajustes', redirect: '/configuracion' },
+        {
+          path: 'tpv',
+          name: 'pos',
+          component: () => import('../views/ComingSoonView.vue'),
+          meta: {
+            title: 'Ventas',
+            headline: 'Las ventas llegarán pronto',
+            summary:
+              'Aquí podrás cobrar, abrir caja y emitir tickets. Todavía no está disponible; no se puede vender desde Faro hoy.',
+            nextHint: 'Mientras tanto, configura tu negocio y prueba con productos de ejemplo.',
+          },
         },
         {
           path: 'clientes',
@@ -44,9 +52,9 @@ const router = createRouter({
           component: () => import('../views/ComingSoonView.vue'),
           meta: {
             title: 'Clientes',
-            module: 'Clientes',
-            phase: 'Fase 2',
-            summary: 'Fichas de clientes, historial y campos personalizados. Pendiente de implementación.',
+            headline: 'La agenda de clientes aún no está lista',
+            summary: 'Podrás guardar clientes y ver su historial en una próxima versión.',
+            nextHint: 'Empieza por tus productos o completa la configuración del negocio.',
           },
         },
         {
@@ -54,11 +62,11 @@ const router = createRouter({
           name: 'inventory',
           component: () => import('../views/ComingSoonView.vue'),
           meta: {
-            title: 'Inventario',
-            module: 'Inventario',
-            phase: 'Fase 2',
+            title: 'Stock',
+            headline: 'El control de stock llegará pronto',
             summary:
-              'Movimientos auditables, almacenes y ajustes. El stock no se editará sin historial.',
+              'Los cambios de existencias se registrarán con fecha y motivo. Aún no puedes ajustar stock.',
+            nextHint: 'Prueba el listado de productos de ejemplo para familiarizarte.',
           },
         },
         {
@@ -66,11 +74,10 @@ const router = createRouter({
           name: 'customize',
           component: () => import('../views/ComingSoonView.vue'),
           meta: {
-            title: 'Personalizar mi negocio',
-            module: 'Personalización',
-            phase: 'Fase 4',
-            summary:
-              'Campos personalizados, formularios, estados y reglas SI/ENTONCES sin JavaScript arbitrario.',
+            title: 'Personalizar',
+            headline: 'Personalización avanzada, más adelante',
+            summary: 'Campos propios, tickets y reglas se configurarán sin programar.',
+            nextHint: 'Hoy puedes cambiar el nombre del negocio y el aspecto en Configuración.',
           },
         },
         {
@@ -78,11 +85,10 @@ const router = createRouter({
           name: 'documents',
           component: () => import('../views/ComingSoonView.vue'),
           meta: {
-            title: 'Diseñador de documentos',
-            module: 'Documentos',
-            phase: 'Fase 3–4',
-            summary:
-              'Editor visual de tickets y facturas con plantillas versionadas. No disponible aún.',
+            title: 'Tickets y documentos',
+            headline: 'El diseño de tickets aún no está disponible',
+            summary: 'Más adelante podrás diseñar tickets y facturas con vista previa real.',
+            nextHint: 'Vuelve al inicio para ver qué puedes hacer hoy.',
           },
         },
         {
@@ -91,16 +97,10 @@ const router = createRouter({
           component: () => import('../views/ComingSoonView.vue'),
           meta: {
             title: 'Informes',
-            module: 'Analítica operativa',
-            phase: 'Fase 5',
-            summary: 'Mermas, descuadres, márgenes y alertas deterministas. Sin dependencia de IA.',
+            headline: 'Los informes llegarán más adelante',
+            summary: 'Ventas, márgenes, mermas y alertas útiles para decidir con datos reales.',
+            nextHint: 'Cuando haya ventas e inventario, los informes tendrán sentido.',
           },
-        },
-        {
-          path: 'ajustes',
-          name: 'settings',
-          component: () => import('../views/SettingsView.vue'),
-          meta: { title: 'Ajustes' },
         },
       ],
     },

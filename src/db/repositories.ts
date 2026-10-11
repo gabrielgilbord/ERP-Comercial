@@ -103,7 +103,7 @@ export async function searchLocal(query: string): Promise<
       kind: 'product',
       id: p.id,
       title: p.name,
-      subtitle: `${p.sku} · demo`,
+      subtitle: `${p.sku} · ejemplo`,
     })
   }
 

@@ -26,7 +26,7 @@ function toggleTheme() {
       </button>
       <div class="topbar__title">
         <span class="eyebrow">Faro</span>
-        <strong>{{ title || 'Gestión comercial' }}</strong>
+        <strong>{{ title || 'Inicio' }}</strong>
       </div>
     </div>
 
@@ -34,9 +34,14 @@ function toggleTheme() {
       <button class="search-chip" type="button" @click="emit('openSearch')">
         <Search :size="16" />
         <span>Buscar</span>
-        <kbd>⌘K</kbd>
+        <kbd aria-hidden="true">Ctrl K</kbd>
       </button>
-      <AppButton variant="ghost" size="sm" :aria-label="isDark ? 'Modo claro' : 'Modo oscuro'" @click="toggleTheme">
+      <AppButton
+        variant="ghost"
+        size="sm"
+        :aria-label="isDark ? 'Usar modo claro' : 'Usar modo oscuro'"
+        @click="toggleTheme"
+      >
         <Sun v-if="isDark" :size="16" />
         <Moon v-else :size="16" />
       </AppButton>
@@ -70,8 +75,8 @@ function toggleTheme() {
 .icon-btn {
   display: none;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface);
@@ -96,9 +101,9 @@ function toggleTheme() {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: 36px;
+  min-height: 40px;
   padding: 0 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-muted);
