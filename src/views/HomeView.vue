@@ -13,7 +13,7 @@ const router = useRouter()
 
 const greeting = computed(() => {
   const name = app.company?.tradeName || app.company?.name
-  return name ? `Hola, ${name}` : 'Bienvenido a Faro'
+  return name ? `Hola, ${name}` : 'Gestión clara, local y tuya'
 })
 </script>
 
