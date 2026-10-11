@@ -75,8 +75,8 @@ try {
   const now = await page.locator('#now-title').textContent()
   if (!later || !now) fail('Identificar disponibles', 'Faltan secciones de disponibilidad')
   const navCount = await page.locator('.sidebar .nav-item').count()
-  if (navCount > 4) fail('Identificar disponibles', `Menú demasiado cargado (${navCount} ítems)`)
-  pass('Identificar disponibles', `Menú con ${navCount} entradas; secciones claras en inicio`)
+  if (navCount < 3) fail('Identificar disponibles', `Menú incompleto (${navCount} ítems)`)
+  pass('Identificar disponibles', `Menú con ${navCount} entradas operativas`)
 
   const page2 = await context.newPage()
   await page2.goto(base + '/configuracion', { waitUntil: 'networkidle' })

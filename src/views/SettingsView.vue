@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
+import { reactive, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import PageHeader from '../components/ui/PageHeader.vue'
 import AppInput from '../components/ui/AppInput.vue'
@@ -8,6 +8,12 @@ import ConfirmDialog from '../components/ui/ConfirmDialog.vue'
 import { useAppStore } from '../stores/appStore'
 import { useThemeStore } from '../stores/themeStore'
 import { resetLocalData } from '../db/database'
+import {
+  downloadBackupJson,
+  exportBackup,
+  parseBackupFile,
+  restoreBackup,
+} from '../services/backupService'
 import type { ThemeMode } from '../domain/types'
 
 const app = useAppStore()
@@ -15,7 +21,12 @@ const theme = useThemeStore()
 const router = useRouter()
 const saved = ref(false)
 const confirmReset = ref(false)
+const confirmRestore = ref(false)
 const showAdvanced = ref(false)
+const backupMsg = ref('')
+const backupError = ref('')
+const pendingRestore = shallowRef<unknown>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const form = reactive({
   name: app.company?.name ?? '',
@@ -68,6 +79,50 @@ async function doReset() {
   await app.init()
   if (app.settings) theme.initFromSettings(app.settings.theme)
   router.push('/asistente')
+}
+
+async function doExportBackup() {
+  backupError.value = ''
+  backupMsg.value = ''
+  try {
+    const payload = await exportBackup()
+    downloadBackupJson(payload)
+    backupMsg.value = `Copia exportada (${payload.exportedAt}).`
+  } catch (e) {
+    backupError.value = e instanceof Error ? e.message : 'No se pudo exportar'
+  }
+}
+
+async function onBackupFile(event: Event) {
+  backupError.value = ''
+  backupMsg.value = ''
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  try {
+    pendingRestore.value = await parseBackupFile(file)
+    confirmRestore.value = true
+  } catch (e) {
+    backupError.value = e instanceof Error ? e.message : 'Archivo inválido'
+  }
+}
+
+async function doRestore() {
+  confirmRestore.value = false
+  const raw = pendingRestore.value
+  pendingRestore.value = null
+  if (!raw) return
+  backupError.value = ''
+  backupMsg.value = ''
+  try {
+    await restoreBackup(raw, { makeSafetyCopy: true })
+    await app.init()
+    if (app.settings) theme.initFromSettings(app.settings.theme)
+    backupMsg.value = 'Copia restaurada correctamente.'
+  } catch (e) {
+    backupError.value = e instanceof Error ? e.message : 'No se pudo restaurar'
+  }
 }
 </script>
 
@@ -132,6 +187,27 @@ async function doReset() {
       </div>
     </section>
 
+    <section class="section">
+      <h2>Copia de seguridad</h2>
+      <p class="hint">
+        Exporta o restaura todos los datos locales de este dispositivo. La restauración sobrescribe
+        lo actual; Faro genera una copia de seguridad previa en memoria antes de aplicar el archivo.
+      </p>
+      <p v-if="backupMsg" class="ok" data-testid="backup-ok">{{ backupMsg }}</p>
+      <p v-if="backupError" class="error" data-testid="backup-error">{{ backupError }}</p>
+      <div class="backup-actions">
+        <AppButton variant="secondary" @click="doExportBackup">Exportar copia JSON</AppButton>
+        <AppButton variant="secondary" @click="fileInput?.click()">Restaurar desde JSON</AppButton>
+        <input
+          ref="fileInput"
+          type="file"
+          accept="application/json,.json"
+          class="file"
+          @change="onBackupFile"
+        />
+      </div>
+    </section>
+
     <section class="section danger-zone">
       <h2>Borrar datos de este dispositivo</h2>
       <p>
@@ -149,6 +225,15 @@ async function doReset() {
       danger
       @cancel="confirmReset = false"
       @confirm="doReset"
+    />
+    <ConfirmDialog
+      :open="confirmRestore"
+      title="¿Restaurar esta copia?"
+      message="Se sobrescribirán los datos locales de este dispositivo con el contenido del archivo."
+      confirm-label="Restaurar"
+      danger
+      @cancel="confirmRestore = false; pendingRestore = null"
+      @confirm="doRestore"
     />
   </div>
 </template>
@@ -227,10 +312,33 @@ async function doReset() {
   font-size: 12px;
 }
 
+.hint,
 .danger-zone p {
   color: var(--text-muted);
   margin-bottom: var(--space-4);
   max-width: 52ch;
+}
+
+.backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.file {
+  display: none;
+}
+
+.ok {
+  color: var(--success);
+  font-weight: 600;
+  margin-bottom: var(--space-3);
+}
+
+.error {
+  color: var(--danger);
+  font-weight: 600;
+  margin-bottom: var(--space-3);
 }
 
 .toast {

@@ -38,10 +38,29 @@ describe('persistencia local IndexedDB', () => {
     expect(settings.setupStep).toBe(2)
   })
 
-  it('carga productos demo buscables', async () => {
+  it('carga productos demo y busca catálogo real', async () => {
     const products = await enableDemoData()
     expect(products.length).toBeGreaterThan(0)
     expect(products.every((p) => p.isDemo)).toBe(true)
+
+    const { upsertProduct } = await import('../src/services/inventoryService')
+    await upsertProduct({
+      name: 'Café molido prueba',
+      sku: 'CAF-TEST',
+      barcode: '',
+      description: '',
+      category: 'Alimentación',
+      brand: '',
+      unit: 'ud',
+      costCents: 100,
+      priceCents: 500,
+      taxPercent: 10,
+      minStock: 0,
+      supplierId: null,
+      status: 'active',
+      notes: '',
+      stock: 1,
+    })
 
     const results = await searchLocal('café')
     expect(results.some((r) => r.kind === 'product')).toBe(true)

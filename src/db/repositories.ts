@@ -88,22 +88,24 @@ export async function searchLocal(query: string): Promise<
     })
   }
 
-  const products = await db.demoProducts
+  const catalog = await db.products
     .filter(
       (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q),
+        p.status === 'active' &&
+        (p.name.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q) ||
+          p.barcode.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q)),
     )
     .limit(20)
     .toArray()
 
-  for (const p of products) {
+  for (const p of catalog) {
     results.push({
       kind: 'product',
       id: p.id,
       title: p.name,
-      subtitle: `${p.sku} · ejemplo`,
+      subtitle: `${p.sku} · stock ${p.stock}`,
     })
   }
 
