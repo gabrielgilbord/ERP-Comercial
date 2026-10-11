@@ -3,14 +3,16 @@
 ## Flujo funcional
 
 1. Configurar empresa  
-2. Crear proveedor y producto  
+2. Crear proveedor y producto en el **catálogo central** (módulo Productos)  
 3. Recibir compra → stock ↑  
 4. Abrir caja  
-5. Vender en TPV → stock ↓ + movimiento de caja + ticket  
+5. Vender en **TPV básico** (solo buscar/escanear/cobrar; no da de alta productos)  
 6. Devolver parcialmente → stock ↑ + reembolso en caja  
 7. Cerrar caja con diferencia  
 8. Consultar informes  
 9. Exportar y restaurar copia de seguridad JSON  
+
+El TPV lee el catálogo vía `CatalogPort`. Hoy el origen es local (`LocalCentralCatalogAdapter`); más adelante puede ser un sistema central remoto sin cambiar la pantalla de cobro.
 
 ## Ejecutar
 
