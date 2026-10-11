@@ -36,22 +36,22 @@ const checklist = computed(() => [
       <p class="hero__brand">Faro</p>
       <h1>{{ businessName ? `Hola, ${businessName}` : 'Tu TPV y gestión comercial' }}</h1>
       <p class="hero__lead">
-        Crea productos, recibe mercancía, vende en el TPV, cobra y cierra caja. Todo queda guardado
-        en este dispositivo.
+        Gestiona el catálogo en Productos (sistema central), vende en un TPV básico y cobra. Todo
+        queda en este dispositivo.
       </p>
       <div class="hero__cta">
         <AppButton variant="primary" size="lg" @click="router.push('/tpv')">Ir al TPV</AppButton>
-        <AppButton variant="secondary" size="lg" @click="router.push('/productos')">Productos</AppButton>
+        <AppButton variant="secondary" size="lg" @click="router.push('/productos')">Catálogo central</AppButton>
       </div>
     </section>
 
     <section class="section">
       <h2>Empezar a trabajar</h2>
       <ul class="action-list">
-        <li><button type="button" @click="router.push('/productos')"><strong>1. Crear productos</strong><span>Nombre, precio, IVA y stock inicial.</span></button></li>
-        <li><button type="button" @click="router.push('/proveedores')"><strong>2. Añadir proveedor y comprar</strong><span>Recibe mercancía para aumentar stock.</span></button></li>
-        <li><button type="button" @click="router.push('/caja')"><strong>3. Abrir caja</strong><span>Indica el efectivo inicial del día.</span></button></li>
-        <li><button type="button" @click="router.push('/tpv')"><strong>4. Vender y cobrar</strong><span>Busca, añade al carrito y confirma el cobro.</span></button></li>
+        <li><button type="button" @click="router.push('/productos')"><strong>1. Catálogo central</strong><span>Da de alta productos aquí; el TPV no los crea.</span></button></li>
+        <li><button type="button" @click="router.push('/proveedores')"><strong>2. Comprar y recibir</strong><span>Actualiza stock desde compras.</span></button></li>
+        <li><button type="button" @click="router.push('/caja')"><strong>3. Abrir caja</strong><span>Efectivo inicial del día.</span></button></li>
+        <li><button type="button" @click="router.push('/tpv')"><strong>4. TPV básico</strong><span>Buscar, escanear, cobrar.</span></button></li>
       </ul>
     </section>
 

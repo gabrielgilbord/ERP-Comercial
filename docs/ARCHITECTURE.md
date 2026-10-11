@@ -7,18 +7,24 @@ Núcleo común multiempresa / multiestablecimiento / multiterminal para pequeño
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  Presentación (Vue)                                      │
-│  Shell · TPV · Catálogo · Personalizar · Documentos …   │
+│  Shell · TPV básico · Catálogo central · Caja · Docs …  │
 ├─────────────────────────────────────────────────────────┤
-│  Dominio + casos (Pinia / servicios)                      │
+│  Dominio + estados (Pinia / servicios)                      │
 │  ventas · stock · documentos · reglas · permisos         │
 ├─────────────────────────────────────────────────────────┤
 │  Puertos (interfaces)                                    │
-│  PersistencePort · PrintPort · SyncPort · FiscalPort … │
+│  CatalogPort · PersistencePort · PrintPort · SyncPort …│
 ├───────────────┬─────────────────┬───────────────────────┤
 │ IndexedDB     │ SQLite (Tauri)  │ Adaptadores externos  │
 │ (web/preview) │ (Windows/macOS) │ pagos · fiscal · sync │
 └───────────────┴─────────────────┴───────────────────────┘
 ```
+
+## TPV vs catálogo central
+
+- **Productos** es el sistema central del catálogo (alta, precios, IVA, stock mínimo).
+- **TPV** solo lee el catálogo vía `CatalogPort` (`src/ports/catalogPort.ts`) y cobra.
+- Adaptador actual: `LocalCentralCatalogAdapter` (datos locales). Futuro: adaptador remoto/sync sin reescribir el TPV.
 
 ## Identificadores y multi-terminal
 
@@ -32,7 +38,7 @@ Núcleo común multiempresa / multiestablecimiento / multiterminal para pequeño
 - Esquema versionado (`db.version(n).stores(...)`).
 - Migraciones locales solo hacia adelante.
 - Transacciones para operaciones de negocio.
-- Copias de seguridad y restauración: Fase 6 (diseño reservado en `meta` / settings).
+- Copias de seguridad y restauración: implementadas en `backupService` (JSON versionado).
 
 ## Offline y sync
 
@@ -42,7 +48,7 @@ Núcleo común multiempresa / multiestablecimiento / multiterminal para pequeño
 | Última sync | `settings.lastSyncAt` (null hasta Fase 6) |
 | Pendientes | `outbox` count (tabla reservada; vacía en Fase 1) |
 | Conflictos | `syncConflicts` (reservado) |
-| Backup | `settings.lastBackupAt` (null hasta implementación) |
+| Backup | `settings.lastBackupAt` |
 
 Sync nocturna solo para operaciones no urgentes. Envíos fiscales sujetos a normativa no se aplazan deliberadamente.
 

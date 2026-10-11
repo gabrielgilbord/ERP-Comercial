@@ -90,7 +90,7 @@ async function save() {
   <div>
     <PageHeader
       title="Productos"
-      subtitle="Catálogo real con precios, impuestos y stock. El stock solo cambia mediante movimientos."
+      subtitle="Sistema central del catálogo. Aquí das de alta lo que el TPV solo podrá vender y cobrar."
     >
       <template #actions>
         <AppButton variant="primary" @click="showForm = !showForm">
